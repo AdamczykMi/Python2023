@@ -3,7 +3,7 @@ def sum_seq(sequence):
     for item in sequence:
         if isinstance(item, (list, tuple)):
             result += sum_seq(item)
-        elif isinstance(item, int):
+        else:
             result += item
     return result
 

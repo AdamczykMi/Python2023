@@ -1,5 +1,7 @@
 import unittest
 from rectangles import *
+
+
 class TestRectangle(unittest.TestCase):
     def test_str(self):
         rect = Rectangle(1, 2, 3, 4)
@@ -31,6 +33,7 @@ class TestRectangle(unittest.TestCase):
         rect = Rectangle(1, 2, 3, 4)
         rect.move(2, 3)
         self.assertEqual(rect, Rectangle(3, 5, 5, 7))
+
 
 if __name__ == "__main__":
     unittest.main()

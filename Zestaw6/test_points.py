@@ -1,5 +1,7 @@
 import unittest
 from points import *
+
+
 class TestPoint(unittest.TestCase):
     def test_str(self):
         point = Point(1, 2)
@@ -47,6 +49,7 @@ class TestPoint(unittest.TestCase):
         point = Point(3, 4)
         result = point.length()
         self.assertEqual(result, 5.0)
+
 
 if __name__ == "__main__":
     unittest.main()

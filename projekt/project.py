@@ -69,6 +69,12 @@ class GUIApp:
 
         self.total_vertices_entry.config(validate="key", validatecommand=(root.register(validate_entry), "%P"))
 
+        root.protocol("WM_DELETE_WINDOW", self.on_close)
+
+    def on_close(self):
+        self.root.quit()
+        self.root.destroy()
+
     def generate_graph(self):
         total_vertices_input = self.total_vertices_entry.get()
 
@@ -88,3 +94,5 @@ if __name__ == "__main__":
     main_root = tk.Tk()
     app = GUIApp(main_root)
     main_root.mainloop()
+
+

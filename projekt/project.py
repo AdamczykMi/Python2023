@@ -71,7 +71,7 @@ class GraphInterface:
         generate_button = tk.Button(window, text="Generuj graf", command=self.generate_and_color_graph)
         generate_button.pack()
 
-        # Miejsce na rysunek grafu
+        # Tworzenie wykresu
         self.figure = plt.Figure(figsize=(9, 6), dpi=100)
         self.ax = self.figure.add_subplot(111)
         self.canvas = FigureCanvasTkAgg(self.figure, self.window)
@@ -134,7 +134,6 @@ class GraphInterface:
         self.canvas.draw()
 
 
-# Uruchomienie aplikacji
 if __name__ == "__main__":
     root = tk.Tk()
     app = GraphInterface(root)

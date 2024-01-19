@@ -116,6 +116,7 @@ class GraphInterface:
             color = [0] * num_vertices
 
             if not graph_coloring(g, num_colors, color, 0):
+                self.draw_graph(g, ['grey'] * num_vertices)
                 messagebox.showinfo("Wynik", "Nie istnieje poprawne kolorowanie dla {} kolorów.".format(num_colors))
             else:
                 self.draw_graph(g, color)

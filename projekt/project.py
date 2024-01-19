@@ -116,7 +116,7 @@ class GraphInterface:
             color = [0] * num_vertices
 
             if not graph_coloring(g, num_colors, color, 0):
-                self.draw_graph(g, ['grey'] * num_vertices)
+                self.draw_graph(g)
                 messagebox.showinfo("Wynik", "Nie istnieje poprawne kolorowanie dla {} kolorów.".format(num_colors))
             else:
                 self.draw_graph(g, color)
@@ -124,14 +124,17 @@ class GraphInterface:
         except ValueError:
             messagebox.showerror("Błąd", "Proszę wprowadzić poprawne dane.")
 
-    def draw_graph(self, graph, color):
+    def draw_graph(self, graph, color=None):
         self.ax.clear()
         G = nx.Graph()
         G.add_nodes_from(range(graph.vertices))
         G.add_edges_from([(u, v) for u in range(graph.vertices) for v in graph.graph[u] if u < v])
 
         pos = nx.spring_layout(G)
-        nx.draw(G, pos, ax=self.ax, with_labels=True, node_color=color, cmap=plt.cm.Set3, node_size=500)
+        if color is None:
+            nx.draw(G, pos, ax=self.ax, with_labels=True, node_size=500)
+        else:
+            nx.draw(G, pos, ax=self.ax, with_labels=True, node_color=color, cmap=plt.cm.Set3, node_size=500)
         self.canvas.draw()
 
 

@@ -221,7 +221,7 @@ Te dwie funkcje są używane w interfejsie użytkownika (`GraphInterface`), aby 
 
 ### 3.3.3 Metoda `generate_and_color_graph(self)`
 ```python
-    def generate_and_color_graph(self):
+        def generate_and_color_graph(self):
 
         if not self.validate_positive_integer(self.vertices_entry.get()):
             messagebox.showerror("Błąd", "Liczba wierzchołków musi być dodatnią liczbą całkowitą.")
@@ -245,6 +245,7 @@ Te dwie funkcje są używane w interfejsie użytkownika (`GraphInterface`), aby 
             color = [0] * num_vertices
 
             if not graph_coloring(g, num_colors, color, 0):
+                self.draw_graph(g)
                 messagebox.showinfo("Wynik", "Nie istnieje poprawne kolorowanie dla {} kolorów.".format(num_colors))
             else:
                 self.draw_graph(g, color)
@@ -252,7 +253,7 @@ Te dwie funkcje są używane w interfejsie użytkownika (`GraphInterface`), aby 
         except ValueError:
             messagebox.showerror("Błąd", "Proszę wprowadzić poprawne dane.")
 ```
-### 3.3.4 Metoda `draw_graph(self, graph, color)`
+
 Funkcja `generate_and_color_graph` jest kluczowym elementem interfejsu użytkownika (`GraphInterface`). Oto opis jej działania:
 
 - **Walidacja Danych Wejściowych**: Na początku funkcja wykonuje trzy walidacje danych wprowadzonych przez użytkownika:
@@ -266,27 +267,30 @@ Funkcja `generate_and_color_graph` jest kluczowym elementem interfejsu użytkown
    - Tworzy instancję klasy `Graph` o liczbie wierzchołków `num_vertices`.
    - Wywołuje metodę `generate_random_edges` na obiekcie `g`, generując losowe krawędzie na podstawie wprowadzonej gęstości `edge_density`.
    - Inicjuje tablicę kolorów `color` o długości `num_vertices`.
-   - Wywołuje funkcję `graph_coloring`, próbując znaleźć poprawne kolorowanie dla grafu `g` przy użyciu `num_colors` kolorów. Jeśli nie jest to możliwe, wyświetla komunikat, że nie istnieje poprawne kolorowanie.
-   - Jeśli poprawne kolorowanie zostanie znalezione, wywołuje metodę `draw_graph` w celu wizualizacji wynikowego grafu z przypisanymi kolorami.
+   - Wywołuje funkcję `graph_coloring`, próbując znaleźć poprawne kolorowanie dla grafu `g` przy użyciu `num_colors` kolorów.
+   - Jeśli nie udało się znaleźć poprawnego kolorowania, wywołuje metodę `draw_graph` w celu wizualizacji grafu bez przypisanych kolorów i wyświetla komunikat o wyniku.
+   - Jeśli poprawne kolorowanie zostanie znalezione, wywołuje metodę `draw_graph` w celu wizualizacji wynikowego grafu z przypisanymi kolorami i wyświetla komunikat o wyniku.
 
 - **Komunikaty dla Użytkownika**:
    - Jeśli dane wejściowe są nieprawidłowe (np. niepoprawny format), użytkownik zostanie poinformowany o błędzie i działanie funkcji zostanie zatrzymane.
    - Po przetworzeniu danych i ewentualnym znalezieniu poprawnego kolorowania, funkcja wyświetla komunikaty za pomocą `messagebox.showinfo`.
 
 Ogólnie rzecz biorąc, funkcja `generate_and_color_graph` zarządza całym procesem generowania grafu, próby jego kolorowania i prezentacji wyników użytkownikowi w interfejsie. Jeśli wystąpią błędy, są one obsługiwane poprzez wyświetlanie odpowiednich komunikatów.
-
+### 3.3.4 Metoda `draw_graph(self, graph, color=None)`
 ```python
-    def draw_graph(self, graph, color):
+        def draw_graph(self, graph, color=None):
         self.ax.clear()
         G = nx.Graph()
         G.add_nodes_from(range(graph.vertices))
         G.add_edges_from([(u, v) for u in range(graph.vertices) for v in graph.graph[u] if u < v])
 
         pos = nx.spring_layout(G)
-        nx.draw(G, pos, ax=self.ax, with_labels=True, node_color=color, cmap=plt.cm.Set3, node_size=500)
+        if color is None:
+            nx.draw(G, pos, ax=self.ax, with_labels=True, node_size=500)
+        else:
+            nx.draw(G, pos, ax=self.ax, with_labels=True, node_color=color, cmap=plt.cm.Set3, node_size=500)
         self.canvas.draw()
 ```
-Ten fragment kodu jest odpowiedzialny za wizualizację grafu z przypisanymi kolorami w interfejsie użytkownika. Oto opis jego działania:
 
 - `self.ax.clear()`: Ta linia kodu czyści poprzednią wizualizację, jeśli istniała, aby można było narysować nowy graf.
 
@@ -296,7 +300,7 @@ Ten fragment kodu jest odpowiedzialny za wizualizację grafu z przypisanymi kolo
    - `G.add_edges_from([(u, v) for u in range(graph.vertices) for v in graph.graph[u] if u < v])`: Dodaje krawędzie między wierzchołkami grafu wizualizacji. To odzwierciedla strukturę grafu oryginalnego, ignorując krawędzie, które zostały dodane dwukrotnie (graf jest nieskierowany).
 
 - `pos = nx.spring_layout(G)`: Określa układ wizualizacji grafu za pomocą algorytmu rozmieszczania wiosny (spring layout) z biblioteki NetworkX. Ten układ stara się rozmieścić wierzchołki w grafie tak, aby były one równomiernie rozłożone i nie nachodziły na siebie.
-
+- `if color is None`: Sprawdza, czy nie zostały przypisane kolory do wierzchołków. Jeśli tak, rysuje graf wizualizacji bez przypisanych kolorów.
 - `nx.draw(G, pos, ax=self.ax, with_labels=True, node_color=color, cmap=plt.cm.Set3, node_size=500)`: Ta linia kodu rysuje graf wizualizacji na podstawie utworzonej struktury `G`. Oto, co robi każdy z jej argumentów:
    - `G`: Graf wizualizacji, który ma być narysowany.
    - `pos`: Układ wierzchołków w grafie.
@@ -309,8 +313,6 @@ Ten fragment kodu jest odpowiedzialny za wizualizację grafu z przypisanymi kolo
 - `self.canvas.draw()`: Aktualizuje widok canvasa (elementu GUI, na którym jest rysowana wizualizacja), aby pokazać nowy graf z przypisanymi kolorami.
 
 Ogólnie rzecz biorąc, ten fragment kodu służy do rysowania grafu wizualizacji z przypisanymi kolorami w oknie interfejsu użytkownika, aby użytkownik mógł zobaczyć wynik kolorowania grafu.
-
-Implementacja programu "Kolorowanie Grafu" jest oparta na obiektowości, co ułatwia zarządzanie kodem i interakcję z użytkownikiem. Algorytm kolorowania grafu jest zaimplementowany w sposób rekurencyjny, umożliwiając systematyczne przeszukiwanie możliwych rozwiązań. Interfejs użytkownika jest prosty i intuicyjny, co ułatwia korzystanie z programu.
 
 ## 4. Podsumowanie i Wyniki Testów
 

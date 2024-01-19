@@ -1,98 +1,141 @@
-import networkx as nx
-import matplotlib.pyplot as plt
 import tkinter as tk
 from tkinter import messagebox
+import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+import networkx as nx
+import random
 
 
 class Graph:
-    def __init__(self):
-        self.graph = nx.Graph()
-        self.colors = []
+    def __init__(self, vertices):
+        self.vertices = vertices
+        self.graph = [[] for _ in range(vertices)]
 
-    def generate_random_graph(self, num_vertices, probability):
-        self.graph = nx.fast_gnp_random_graph(num_vertices, probability)
-        self.colors = [-1] * len(self.graph.nodes)
-        self.colors[0] = 0
+    def add_edge(self, u, v):
+        self.graph[u].append(v)
+        self.graph[v].append(u)
 
-    def color_graph(self):
-        def is_safe(vertex, c):
-            for neighbor in self.graph.neighbors(vertex):
-                if self.colors[neighbor] == c:
-                    return False
-            return True
+    def generate_random_edges(self, density):
+        # Dodaj losowe krawędzie do grafu na podstawie zadanej gęstości
+        max_edges = (self.vertices * (self.vertices - 1)) // 2
+        num_edges = int(density * max_edges)
 
-        def color_util(vertex):
-            for c in range(len(self.graph.nodes)):
-                if is_safe(vertex, c):
-                    self.colors[vertex] = c
-                    if vertex + 1 < len(self.graph.nodes):
-                        if color_util(vertex + 1):
-                            return True
-                    else:
-                        return True
-                    self.colors[vertex] = -1
+        edges_added = 0
+        while edges_added < num_edges:
+            u = random.randint(0, self.vertices - 1)
+            v = random.randint(0, self.vertices - 1)
 
-        color_util(1)
-
-    def draw_colored_graph(self, canvas):
-        pos = nx.spring_layout(self.graph)
-        nx.draw(self.graph, pos, with_labels=True, node_color=self.colors, cmap=plt.cm.rainbow, font_color='white')
-        canvas.draw()
+            if u != v and v not in self.graph[u]:
+                self.add_edge(u, v)
+                edges_added += 1
 
 
-def validate_entry(value):
-    return value.isdigit() or value == ""
+def is_safe(vertex, color, graph, c):
+    for neighbor in graph[vertex]:
+        if color[neighbor] == c:
+            return False
+    return True
 
 
-class GUIApp:
-    def __init__(self, root):
-        self.root = root
-        self.root.title("Graph Colorization")
+def graph_coloring(graph, m, color, v):
+    if v == graph.vertices:
+        return True
 
-        self.graph = Graph()
-
-        self.total_vertices_label = tk.Label(root, text="Liczba wierzchołków w grafie:")
-        self.total_vertices_label.pack()
-        self.total_vertices_entry = tk.Entry(root)
-        self.total_vertices_entry.pack()
-
-        self.generate_button = tk.Button(root, text="Generuj graf", command=self.generate_graph)
-        self.generate_button.pack()
+    for c in range(1, m + 1):
+        if is_safe(v, color, graph.graph, c):
+            color[v] = c
+            if graph_coloring(graph, m, color, v + 1):
+                return True
+            color[v] = 0
+    return False
 
 
-        self.figure, self.ax = plt.subplots(figsize=(10, 8))
-        self.canvas = FigureCanvasTkAgg(self.figure, master=root)
+class GraphInterface:
+    def __init__(self, window):
+        self.window = window
+        self.window.title("Kolorowanie Grafu")
+
+        # Tworzenie interfejsu
+        tk.Label(window, text="Liczba wierzchołków:").pack()
+        self.vertices_entry = tk.Entry(window)
+        self.vertices_entry.pack()
+
+        tk.Label(window, text="Liczba kolorów:").pack()
+        self.colors_entry = tk.Entry(window)
+        self.colors_entry.pack()
+
+        tk.Label(window, text="Gęstość krawędzi (0-1):").pack()
+        self.density_entry = tk.Entry(window)
+        self.density_entry.pack()
+
+        generate_button = tk.Button(window, text="Generuj graf", command=self.generate_and_color_graph)
+        generate_button.pack()
+
+        # Miejsce na rysunek grafu
+        self.figure = plt.Figure(figsize=(9, 6), dpi=100)
+        self.ax = self.figure.add_subplot(111)
+        self.canvas = FigureCanvasTkAgg(self.figure, self.window)
         self.canvas.get_tk_widget().pack()
         self.ax.set_axis_off()
 
+    def validate_positive_integer(self, value):
+        try:
+            val = int(value)
+            return val > 0
+        except ValueError:
+            return False
 
-        self.total_vertices_entry.config(validate="key", validatecommand=(root.register(validate_entry), "%P"))
+    def validate_density(self, value):
+        try:
+            val = float(value)
+            return 0 <= val <= 1
+        except ValueError:
+            return False
 
-        root.protocol("WM_DELETE_WINDOW", self.on_close)
+    def generate_and_color_graph(self):
 
-    def on_close(self):
-        self.root.quit()
-        self.root.destroy()
-
-    def generate_graph(self):
-        total_vertices_input = self.total_vertices_entry.get()
-
-        if not total_vertices_input:
-            tk.messagebox.showerror("Błąd", "Proszę wpisać liczbę wierzchołków przed generowaniem grafu.")
+        if not self.validate_positive_integer(self.vertices_entry.get()):
+            messagebox.showerror("Błąd", "Liczba wierzchołków musi być dodatnią liczbą całkowitą.")
             return
 
-        total_vertices = int(total_vertices_input)
-        self.graph.generate_random_graph(total_vertices, probability=0.4)
-        self.graph.color_graph()
+        if not self.validate_positive_integer(self.colors_entry.get()):
+            messagebox.showerror("Błąd", "Liczba kolorów musi być dodatnią liczbą całkowitą.")
+            return
 
+        if not self.validate_density(self.density_entry.get()):
+            messagebox.showerror("Błąd", "Gęstość krawędzi musi być liczbą zmiennoprzecinkową od 0 do 1.")
+            return
+
+        try:
+            num_vertices = int(self.vertices_entry.get())
+            num_colors = int(self.colors_entry.get())
+            edge_density = float(self.density_entry.get())
+
+            g = Graph(num_vertices)
+            g.generate_random_edges(edge_density)
+            color = [0] * num_vertices
+
+            if not graph_coloring(g, num_colors, color, 0):
+                messagebox.showinfo("Wynik", "Nie istnieje poprawne kolorowanie dla {} kolorów.".format(num_colors))
+            else:
+                self.draw_graph(g, color)
+                messagebox.showinfo("Wynik", "Istnieje poprawne kolorowanie dla {} kolorów.".format(num_colors))
+        except ValueError:
+            messagebox.showerror("Błąd", "Proszę wprowadzić poprawne dane.")
+
+    def draw_graph(self, graph, color):
         self.ax.clear()
-        self.graph.draw_colored_graph(self.canvas)
+        G = nx.Graph()
+        G.add_nodes_from(range(graph.vertices))
+        G.add_edges_from([(u, v) for u in range(graph.vertices) for v in graph.graph[u] if u < v])
+
+        pos = nx.spring_layout(G)
+        nx.draw(G, pos, ax=self.ax, with_labels=True, node_color=color, cmap=plt.cm.Set3, node_size=500)
+        self.canvas.draw()
 
 
+# Uruchomienie aplikacji
 if __name__ == "__main__":
-    main_root = tk.Tk()
-    app = GUIApp(main_root)
-    main_root.mainloop()
-
-
+    root = tk.Tk()
+    app = GraphInterface(root)
+    root.mainloop()
